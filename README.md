@@ -8,9 +8,10 @@ This custom component for esphome supports only the sending and receiving of com
 
 There is no support for sensor data just the basic send/recv functionality using a simple data protocol with command ack.
 
-The code is inspired by Beethowen:
+The code is inspired by Beethowen and EasyNow:
 [Beethowen Transmitter](https://github.com/afarago/esphome_component_bthome/blob/master/components/docs/beethowen_transmitter.rst),
 [Beethowen Receiver](https://github.com/afarago/esphome_component_bthome/blob/master/components/docs/beethowen_receiver.rst)
+[EasyNow](https://gitlab.com/dbuggz/ripnetuk-esphome-easynow)
 
 ## Remarks
 
@@ -59,20 +60,20 @@ espnow_proxy:
   id: espnow_send
   channel: 1
 
-  on_command:  # All commands
+  on_packet_data:  # All packets
     - ...
-  on_command_data:
+  on_command_data:  # command data
     - ...
-  on_send_started:
+  on_send_started:  # sending starts
     - ...
-  on_send_finished:
+  on_send_finished:  # sending finished
     - ...
-  on_send_failed:
+  on_send_failed:  # sending failed
     - ...
   peers:
     - mac_address: AA:BB:CC:DD:EE:FF
 
-      on_command:  # Only commands directed to this peer
+      on_packet_data:  # Only packets directed to this peer
         - ...
       on_command_data:
         - ...
