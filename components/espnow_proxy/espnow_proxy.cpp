@@ -1,7 +1,5 @@
 #include "espnow_proxy.h"
 
-//FIXME #include "esphome/components/wifi/wifi_component.h"
-
 namespace esphome {
 namespace espnow_proxy {
 
@@ -12,35 +10,30 @@ namespace espnow_proxy {
 
     void ESPNowProxy::setup_wifi_() {
 
-        espnow_proxy_base::begin(channel_);
+        ESP_LOGD(TAG, "setup_wifi_");
+
+        espnow_proxy_base::begin();
 
         if (!espnow_proxy_base::is_ready()) {
             ESP_LOGW(TAG, "ESPNow not ready, will try later to begin");
         }
 
-        // disables wifi component
-        //FIXME should the default component be disabled? ap needs to be setup then. wifi::global_wifi_component->mark_failed();
-
         // ensure receiver address is in peers
         uint8_t *receiver;
-        int netif = ESP_IF_WIFI_STA;
-        int peer_netif = ESP_IF_WIFI_AP;
         if (address_) {
             receiver = addr64_to_addr(address_);
         } else {
             receiver = (uint8_t *)espnow_proxy_base::BROADCAST;
-            netif = ESP_IF_WIFI_AP;
-            peer_netif = ESP_IF_WIFI_STA;
         }
         if (!espnow_proxy_base::has_peer(receiver)) {
-            espnow_proxy_base::add_peer(receiver, 0, netif);
+            espnow_proxy_base::add_peer(receiver);
         }
 
         // add peers
         for (auto it = peers_.begin(); it != peers_.end(); ++it) {
             uint8_t *address = addr64_to_addr(it->first);
             if (!espnow_proxy_base::has_peer(address)) {
-                espnow_proxy_base::add_peer(address, 0, peer_netif);
+                espnow_proxy_base::add_peer(address);
             }
         }
 
@@ -65,7 +58,7 @@ namespace espnow_proxy {
         if (peers_.find(temp_address) != peers_.end()) {
             if (!espnow_proxy_base::has_peer(addr64_to_addr(address))) {
                 ESP_LOGW(TAG, "Adding softAP peer %s", addr64_to_str(address).c_str());
-                espnow_proxy_base::add_peer(addr64_to_addr(address), 0);
+                espnow_proxy_base::add_peer(addr64_to_addr(address));
             }
             return peers_[temp_address];
         }
@@ -77,28 +70,7 @@ namespace espnow_proxy {
 
     void ESPNowProxy::on_send_(const uint8_t *addr, esp_now_send_status_t status) {
 
-        if (!send_data_) {
-            ESP_LOGD(TAG, "Send callback called without send data");
-            return;
-        }
-
         ESP_LOGD(TAG, "Message send status %d", status);
-
-        if (status == ESP_NOW_SEND_SUCCESS) {
-
-            last_packet_id_++;
-            send_data_->sent = true;
-            this->on_send_finished_callback.call();
-
-        } else {
-
-            ESP_LOGW(TAG, "Message send failed, moving back to send queue");
-            send_data_->sent = false;
-            this->on_send_failed_callback.call();
-
-        }
-        send_queue_->push_back(send_data_);
-        send_data_ = nullptr;
     }
 
     void ESPNowProxy::on_recv_(const uint8_t *addr, const uint8_t *data, int size) {
@@ -183,7 +155,6 @@ namespace espnow_proxy {
 
         ESP_LOGCONFIG(TAG, "ESPNowProxy...");
         ESP_LOGCONFIG(TAG, "  Connection State: %d", espnow_proxy_base::is_ready());
-        ESP_LOGCONFIG(TAG, "  Network Channel: %d", channel_);
         if (address_) {
             ESP_LOGCONFIG(TAG, "  Receiver Address: %s", addr64_to_str(get_address()).c_str());
         } else {
@@ -216,9 +187,8 @@ namespace espnow_proxy {
             esp_now_peer_info_t peer = peers[idx];
             mac_address_t address = espnow_proxy_base::addr_to_addr64(peer.peer_addr);
             ESP_LOGCONFIG(
-                TAG, "    ESPNow Peer - address: %s channel: %d ifidx: %d%s",
+                TAG, "    ESPNow Peer - address: %s - ifidx: %d%s",
                 addr_to_str(peer.peer_addr).c_str(),
-                peer.channel,
                 peer.ifidx,
                 address_ == address ? " <- Receiver" : "");
         }
@@ -289,14 +259,10 @@ namespace espnow_proxy {
     }
 
     bool ESPNowProxy::process_send_queue_() {
-        if (send_queue_->empty() || send_data_) {
+        if (send_queue_->empty()) {
             return false;
         }
 
-        /*send_data_t *message = send_queue_->front();
-        if (message->sent) {  // while waiting for a response, don't send new messages
-            message = nullptr;
-        }*/
         // get message that was not sent yet from queue
         send_data_t *message = nullptr;
         for (auto it = send_queue_->begin(); it != send_queue_->end(); ) {
@@ -324,25 +290,23 @@ namespace espnow_proxy {
             message->time = millis();
         }
         message->packet_id = last_packet_id_;
-        send_data_ = message;
+        this->on_send_started_callback.call();
+
         if (send_command_data(addr64_to_addr(message->address), message->data, message->size, message->packet_id)) {
 
-            // the message was sent and will be processed later
-            // after success in on_send_
-            this->on_send_started_callback.call();
-            ESP_LOGD(TAG, "Message sent, further processing in on_send_");
-            // store in send_data_ so in on_send_ it can be processed
+            ESP_LOGW(TAG, "Message sent successfully");
+            last_packet_id_++;
+            message->sent = true;
+            this->on_send_finished_callback.call();
 
         } else {
 
-            // the message was not sent, it will not be processed
-            // in on_send_
-            ESP_LOGD(TAG, "Message not sent, moving back to queue");
-            // put back into send queue if sending was unsuccessful
-            send_queue_->push_back(message);
-            send_data_ = nullptr;
+            ESP_LOGW(TAG, "Message send failed");
+            message->sent = false;
+            this->on_send_failed_callback.call();
 
         }
+        send_queue_->push_back(message);
 
         return true;
 

@@ -8,7 +8,6 @@
 #include <esp_now.h>
 #include <esp_log.h>
 
-#include <WiFi.h>
 #include <Arduino.h>
 
 #include "common.h"
@@ -37,12 +36,12 @@ namespace espnow_proxy_base {
 
     // Function prototypes
     bool send(uint8_t *dest, uint8_t *data, size_t size);
-    void begin(uint8_t channel);
+    void begin();
     void end();
     bool add_send_callback(send_callback_t callback);
     bool add_recv_callback(recv_callback_t callback);
 
-    bool add_peer(const uint8_t *peer, int channel, int netif=ESP_IF_WIFI_STA);
+    bool add_peer(const uint8_t *peer, int channel=0, int netif=ESP_IF_WIFI_STA);
     bool has_peer(const uint8_t *peer);
     bool remove_peer(const uint8_t *peer);
     int list_peers(esp_now_peer_info_t* peers, int max_peers);

@@ -10,7 +10,6 @@ from esphome.const import (
 
 CONF_ESPNowProxy_ID = "ESPNowProxy_ID"
 
-CONF_CHANNEL = "channel"
 CONF_PEERS = "peers"
 
 CONF_NAME_PREFIX = "name_prefix"
@@ -125,7 +124,6 @@ class Generator:
     def generate_proxy_schema(self):
         schema = cv.Schema({
             cv.GenerateID(): cv.declare_id(self.get_receiver()),
-            cv.Required(CONF_CHANNEL): cv.uint8_t,
             cv.Optional(CONF_MAC_ADDRESS): cv.mac_address,
             cv.Optional(CONF_PEERS): cv.ensure_list(
                 self.generate_peer_schema()
@@ -207,7 +205,7 @@ class Generator:
 
     async def to_code(self, config):
         var = cg.new_Pvariable(config[CONF_ID])
-        cg.add(var.set_channel(config[CONF_CHANNEL]))
+
         if CONF_MAC_ADDRESS in config:
             cg.add(var.set_address(config[CONF_MAC_ADDRESS].as_hex))
         await cg.register_component(var, config)

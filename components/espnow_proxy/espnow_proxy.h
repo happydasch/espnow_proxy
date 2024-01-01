@@ -53,12 +53,8 @@ namespace espnow_proxy {
             mac_address_t get_address() { return address_; };
             void set_address(mac_address_t address) { address_ = address; };
 
-            uint8_t get_channel() { return channel_; }
-            void set_channel(uint8_t channel) { channel_ = channel; }
-
         protected:
             mac_address_t address_{0};
-            uint8_t channel_{0};
     };
 
     class ESPNowProxyPeer: public ESPNowProxyBase {
@@ -89,7 +85,6 @@ namespace espnow_proxy {
             std::deque<send_data_t *> *send_ack_queue_ = new std::deque<send_data_t *>();
 
             // packet
-            send_data_t *send_data_;
             uint8_t last_packet_id_{0};
 
             // basic functions

@@ -120,40 +120,24 @@ namespace espnow_proxy_base {
         set_success_(false);
 
         if (has_peer(dest)) {
-            if (esp_now_send(dest, data, size) != ESP_OK) {
-                set_success_(false);
-            } else {
+            if (esp_now_send(dest, data, size) == ESP_OK) {
                 set_success_(true);
             }
         } else {
             ESP_LOGW(TAG, "Unknown peer: %s", addr_to_str(dest).c_str());
-            set_sending_(false);
-            return false;
         }
 
         ESP_LOGD(TAG, "Send handler finished: %d", is_success());
+        set_sending_(false);
         return is_success();
     }
 
-    void begin(uint8_t channel) {
+    void begin() {
         if (is_ready()) {
             end();
         }
 
-        /*ESP_ERROR_CHECK(esp_netif_init());
-        ESP_ERROR_CHECK(esp_event_loop_create_default());
-        wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-        ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-        ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-        ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_APSTA) );
-        ESP_ERROR_CHECK( esp_wifi_start());
-        ESP_ERROR_CHECK( esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE));*/
-
-        uint8_t current_channel = WiFi.channel();
-        ESP_LOGD(TAG, "Begin: %d (current channel %d)", channel, current_channel);
-        WiFi.mode(WIFI_AP_STA);
-        ESP_LOGD(TAG, "Begin: change channel to %d", channel);
-        WiFi.channel(channel);
+        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
         state_.is_ready = false;
         if (esp_now_init() == ESP_OK) {
             ESP_LOGD(TAG, "Begin: init done");
@@ -170,7 +154,6 @@ namespace espnow_proxy_base {
         if (!is_ready()) {
             return;
         }
-        WiFi.disconnect(true, false);
         ESP_LOGD(TAG, "End: deinit call");
         esp_now_deinit();
         ESP_LOGD(TAG, "End: unregister recv cb call");
