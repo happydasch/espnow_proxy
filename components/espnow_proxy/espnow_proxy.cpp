@@ -117,6 +117,10 @@ namespace espnow_proxy {
 
     }
 
+    bool ESPNowProxy::send(std::string data) {
+        return ESPNowProxy::send(data.c_str());
+    }
+
     void ESPNowProxy::setup() {
 
         // setup callbacks (send/recv)

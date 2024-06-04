@@ -100,6 +100,7 @@ namespace espnow_proxy {
 
         public:
             bool send(const char *data);
+            bool send(std::string data);
             void setup() override;
             void loop() override;
             void dump_config() override;
