@@ -124,7 +124,9 @@ namespace espnow_proxy_base {
                 set_success_(true);
             }
         } else {
-            ESP_LOGW(TAG, "Unknown peer: %s", addr_to_str(dest).c_str());
+            if (!add_peer(dest, 0, 0)) {
+                ESP_LOGW(TAG, "Unknown peer: %s", addr_to_str(dest).c_str());
+            }
         }
 
         ESP_LOGD(TAG, "Send handler finished: %d", is_success());

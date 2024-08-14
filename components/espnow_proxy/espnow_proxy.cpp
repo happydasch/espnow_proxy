@@ -29,14 +29,6 @@ namespace espnow_proxy {
             espnow_proxy_base::add_peer(receiver);
         }
 
-        // add peers
-        for (auto it = peers_.begin(); it != peers_.end(); ++it) {
-            uint8_t *address = addr64_to_addr(it->first);
-            if (!espnow_proxy_base::has_peer(address)) {
-                espnow_proxy_base::add_peer(address);
-            }
-        }
-
     }
 
     ESPNowProxyPeer *ESPNowProxy::create_peer_(const mac_address_t address) {
