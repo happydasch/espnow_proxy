@@ -65,7 +65,7 @@ namespace espnow_proxy_base {
         peer_info.ifidx = static_cast<wifi_interface_t>(netif);
         return esp_now_add_peer(&peer_info) == ESP_OK;
 #elif ESP8266
-        return esp_now_add_peer(peer, ESP_NOW_ROLE_SLAVE, static_cast<uint8_t>(channel), NULL, 0) == 0;
+        return esp_now_add_peer(peer, ESP_NOW_ROLE_COMBO, static_cast<uint8_t>(channel), NULL, 0) == 0;
 #endif        
     }
 
