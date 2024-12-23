@@ -8,13 +8,12 @@
 #ifdef ESP32
 #include <esp_wifi.h>
 #include <esp_now.h>
+#include <esp_log.h>
 #elif ESP8266
 #include <c_types.h>
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 #endif
-
-#include <esp_log.h>
 
 #include <Arduino.h>
 
