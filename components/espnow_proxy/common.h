@@ -13,7 +13,7 @@ namespace espnow_proxy_base {
     #define MAGIC_HEADER_LEN 2
     #define MAX_DATA_LEN 250
     #define SEND_TIMEOUT_MS 2500L
-    #define HEADER_LEN (sizeof(command_header_t))
+    #define HEADER_LEN 4
     #define MAX_PAYLOAD_LENGTH (MAX_DATA_LEN - HEADER_LEN)
 
     typedef uint64_t mac_address_t;
