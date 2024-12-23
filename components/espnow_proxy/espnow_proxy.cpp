@@ -114,6 +114,7 @@ namespace espnow_proxy {
     }
 
     void ESPNowProxy::setup() {
+        ESP_LOGD(TAG, "setup()");
 
         // setup callbacks (send/recv)
         espnow_proxy_base::add_send_callback(
@@ -129,6 +130,7 @@ namespace espnow_proxy {
     }
 
     void ESPNowProxy::loop() {
+        ESP_LOGD(TAG, "loop()");
 
         if (!espnow_proxy_base::is_ready()) {
             ESP_LOGD(TAG, "ESPNow not ready, trying to start in loop");
