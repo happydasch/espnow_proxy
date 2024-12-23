@@ -49,21 +49,24 @@ namespace espnow_proxy_base {
 
     bool add_peer(const uint8_t *peer, int channel, int netif) {
         if (!is_ready()) {
+            ESP_LOGW(TAG, "Attempted to add peer when not ready.");            
             return false;
         }
-
-        esp_now_peer_info_t peer_info{};
-        std::copy_n(peer, MAC_ADDRESS_LEN, peer_info.peer_addr);
-
-        peer_info.channel = static_cast<uint8_t>(channel);
-        peer_info.ifidx = static_cast<wifi_interface_t>(netif);
-
         if (has_peer(peer)) {
             ESP_LOGD(TAG, "Peer %s already exists", addr_to_str(peer).c_str());
-            return esp_now_mod_peer(&peer_info) == ESP_OK;
+            return false;
         }
         ESP_LOGD(TAG, "Adding peer %s", addr_to_str(peer).c_str());
+        
+#ifdef ESP32
+        esp_now_peer_info_t peer_info{};
+        std::copy_n(peer, MAC_ADDRESS_LEN, peer_info.peer_addr);
+        peer_info.channel = static_cast<uint8_t>(channel);
+        peer_info.ifidx = static_cast<wifi_interface_t>(netif);
         return esp_now_add_peer(&peer_info) == ESP_OK;
+#elif ESP8266
+        return esp_now_add_peer(peer, ESP_NOW_ROLE_SLAVE, static_cast<uint8_t>(channel), NULL, 0) == 0;
+#endif        
     }
 
     bool has_peer(const uint8_t *peer) {
