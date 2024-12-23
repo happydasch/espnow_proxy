@@ -136,14 +136,22 @@ namespace espnow_proxy_base {
         }
 
         state_.is_ready = false;
-        if (esp_now_init() == ESP_OK) {
-            ESP_LOGD(TAG, "Begin: init done");
-            ESP_ERROR_CHECK(esp_now_register_send_cb(send_handler));
-            ESP_ERROR_CHECK(esp_now_register_recv_cb(recv_handler));
-            state_.is_ready = true;
-        } else {
+        if (esp_now_init() != ESP_OK) {
             ESP_LOGW(TAG, "Begin: esp_now_init failed");
+            return;
         }
+        ESP_LOGD(TAG, "Begin: init done");
+        
+        if (esp_now_register_send_cb(send_handler) != ESP_OK) {
+            ESP_LOGW(TAG, "Begin: esp_now_register_send_cb failed");
+            return;
+        }
+        if (esp_now_register_recv_cb(send_handler) != ESP_OK) {
+            ESP_LOGW(TAG, "Begin: esp_now_register_recv_cb failed");
+            return;
+        }
+        
+        state_.is_ready = true;
         ESP_LOGI(TAG, "Begin: finished");
     }
 
