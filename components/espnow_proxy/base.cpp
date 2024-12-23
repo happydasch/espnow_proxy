@@ -192,8 +192,11 @@ namespace espnow_proxy_base {
     }
 
     // callbacks
-
+#ifdef ESP32
     void send_handler(const uint8_t *addr, esp_now_send_status_t status) {
+#elif ESP8266
+    void send_handler(uint8_t *addr, esp_now_send_status_t status) {        
+#endif
         if (status == ESP_NOW_SEND_SUCCESS) {
             set_success_(true);
             inc_sent_();
@@ -211,7 +214,11 @@ namespace espnow_proxy_base {
         }
     }
 
+#ifdef ESP32        
     void recv_handler(const uint8_t *addr, const uint8_t *data, int size) {
+#elif ESP8266
+    void recv_handler(uint8_t *addr, uint8_t *data, uint8_t size) {
+#endif
         // addr may be different then base address, see the link below for details.
         // https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/misc_system_api.html
         set_sender_((uint8_t *)addr);  // store the sender of the last message received
