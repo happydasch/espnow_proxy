@@ -16,6 +16,7 @@
 typedef uint8_t esp_now_send_status_t;
 static const int ESP_IF_WIFI_STA = 1;
 static const int ESP_OK = 0;
+static const int ESP_NOW_SEND_SUCCESS = 0;
 #endif
 
 #include <Arduino.h>
