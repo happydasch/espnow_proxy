@@ -52,7 +52,6 @@ namespace espnow_proxy_base {
     bool add_peer(const uint8_t *peer, int channel=0, int netif=ESP_IF_WIFI_STA);
     bool has_peer(const uint8_t *peer);
     bool remove_peer(const uint8_t *peer);
-    int list_peers(esp_now_peer_info_t* peers, int max_peers);
 
     uint8_t *sender();
     bool is_success();
