@@ -13,7 +13,7 @@
 #include <c_types.h>
 #include <ESP8266WiFi.h>
 #include <espnow.h>
-typedef uint8_t esp_now_send_status_t
+typedef uint8_t esp_now_send_status_t;
 #endif
 
 #include <Arduino.h>
