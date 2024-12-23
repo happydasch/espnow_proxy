@@ -67,7 +67,7 @@ namespace espnow_proxy_base {
 #elif ESP8266
         uint8_t peer_addr[MAC_ADDRESS_LEN];
         std::copy_n(peer, MAC_ADDRESS_LEN, peer_addr);        
-        return esp_now_add_peer(peer_addr, ESP_NOW_ROLE_COMBO, static_cast<uint8_t>(channel), NULL, 0) == 0;
+        return esp_now_add_peer(peer_addr, ESP_NOW_ROLE_COMBO, static_cast<uint8_t>(channel), NULL, 0) == ESP_OK;
 #endif        
     }
 
@@ -87,7 +87,7 @@ namespace espnow_proxy_base {
 #elif ESP8266
         uint8_t peer_addr[MAC_ADDRESS_LEN];
         std::copy_n(peer, MAC_ADDRESS_LEN, peer_addr);        
-        return is_ready() && esp_now_del_peer(peer_addr) == 0;
+        return is_ready() && esp_now_del_peer(peer_addr) == ESP_OK;
 #endif        
     }
 
@@ -135,7 +135,6 @@ namespace espnow_proxy_base {
             end();
         }
 
-        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
         state_.is_ready = false;
         if (esp_now_init() == ESP_OK) {
             ESP_LOGD(TAG, "Begin: init done");
