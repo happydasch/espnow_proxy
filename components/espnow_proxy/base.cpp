@@ -72,32 +72,23 @@ namespace espnow_proxy_base {
     }
 
     bool has_peer(const uint8_t *peer) {
+#ifdef ESP32
         return is_ready() && esp_now_is_peer_exist(peer);
+#elif ESP8266
+        uint8_t peer_addr[MAC_ADDRESS_LEN];
+        std::copy_n(peer, MAC_ADDRESS_LEN, peer_addr);        
+        return is_ready() && esp_now_is_peer_exist(peer_addr);
+#endif
     }
 
     bool remove_peer(const uint8_t *peer) {
+#ifdef ESP32        
         return is_ready() && esp_now_del_peer(peer) == ESP_OK;
-    }
-
-    int list_peers(esp_now_peer_info_t* peers, int max_peers) {
-        if (!is_ready()) {
-            return 0;
-        }
-        int total = 0;
-        esp_now_peer_info_t peer;
-        for (
-            esp_err_t e = esp_now_fetch_peer(true, &peer);
-            e == ESP_OK;
-            e = esp_now_fetch_peer(false, &peer)
-        ) {
-            uint8_t* mac = peer.peer_addr;
-            uint8_t channel = peer.channel;
-            if (total < max_peers) {
-                memcpy(&peers[total], &peer, sizeof(esp_now_peer_info_t));
-            }
-            ++total;
-        }
-        return total;
+#elif ESP8266
+        uint8_t peer_addr[MAC_ADDRESS_LEN];
+        std::copy_n(peer, MAC_ADDRESS_LEN, peer_addr);        
+        return is_ready() && esp_now_del_peer(peer_addr) == 0;
+#endif        
     }
 
     // public functions
