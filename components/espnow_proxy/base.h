@@ -14,6 +14,7 @@
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 typedef uint8_t esp_now_send_status_t;
+typedef esp_now_send_status_t uint8_t;
 static const int ESP_IF_WIFI_STA = 1;
 static const int ESP_OK = 0;
 static const int ESP_NOW_SEND_SUCCESS = 0;
@@ -63,8 +64,12 @@ namespace espnow_proxy_base {
     State get_state();
 
     // Callback function prototypes
+#ifdef ESP32
     void send_handler(const uint8_t *addr, esp_now_send_status_t status);
     void recv_handler(const uint8_t *addr, const uint8_t *data, int size);
-
+#elif ESP8266
+    void send_handler(uint8_t *addr, esp_now_send_status_t status);
+    void recv_handler(uint8_t *addr, uint8_t *data, uint8_t size);
+#endif
 }  // namespace espnow_proxy_base
 }  // esphome
