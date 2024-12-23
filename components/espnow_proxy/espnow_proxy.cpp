@@ -130,8 +130,6 @@ namespace espnow_proxy {
     }
 
     void ESPNowProxy::loop() {
-        ESP_LOGD(TAG, "loop()");
-
         if (!espnow_proxy_base::is_ready()) {
             ESP_LOGD(TAG, "ESPNow not ready, trying to start in loop");
             setup_wifi_();
