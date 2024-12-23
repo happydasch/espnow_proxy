@@ -146,7 +146,7 @@ namespace espnow_proxy_base {
             ESP_LOGW(TAG, "Begin: esp_now_register_send_cb failed");
             return;
         }
-        if (esp_now_register_recv_cb(send_handler) != ESP_OK) {
+        if (esp_now_register_recv_cb(recv_handler) != ESP_OK) {
             ESP_LOGW(TAG, "Begin: esp_now_register_recv_cb failed");
             return;
         }
