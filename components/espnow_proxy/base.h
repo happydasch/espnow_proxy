@@ -14,6 +14,7 @@
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 typedef uint8_t esp_now_send_status_t;
+static const int ESP_IF_WIFI_STA = 1;
 #endif
 
 #include <Arduino.h>
