@@ -290,7 +290,7 @@ namespace espnow_proxy {
 
         if (send_command_data(addr64_to_addr(message->address), message->data, message->size, message->packet_id)) {
 
-            ESP_LOGW(TAG, "Message sent successfully");
+            ESP_LOGD(TAG, "Message sent successfully");
             last_packet_id_++;
             message->sent = true;
             this->on_send_finished_callback.call();
