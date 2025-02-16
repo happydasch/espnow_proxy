@@ -114,6 +114,7 @@ namespace espnow_proxy {
     }
 
     void ESPNowProxy::setup() {
+        ESP_LOGD(TAG, "setup()");
 
         // setup callbacks (send/recv)
         espnow_proxy_base::add_send_callback(
@@ -129,7 +130,6 @@ namespace espnow_proxy {
     }
 
     void ESPNowProxy::loop() {
-
         if (!espnow_proxy_base::is_ready()) {
             ESP_LOGD(TAG, "ESPNow not ready, trying to start in loop");
             setup_wifi_();
@@ -144,51 +144,6 @@ namespace espnow_proxy {
         if (process_send_queue_()) {
             return;
         }
-
-    }
-
-    void ESPNowProxy::dump_config() {
-
-        ESP_LOGCONFIG(TAG, "ESPNowProxy...");
-        ESP_LOGCONFIG(TAG, "  Connection State: %d", espnow_proxy_base::is_ready());
-        if (address_) {
-            ESP_LOGCONFIG(TAG, "  Receiver Address: %s", addr64_to_str(get_address()).c_str());
-        } else {
-            ESP_LOGCONFIG(TAG, "  Receiver Broadcast");
-        }
-
-        // peers configured
-        ESP_LOGCONFIG(TAG, "  Peers:");
-        for (auto it = peers_.begin(); it != peers_.end(); ++it) {
-            mac_address_t address = it->first;
-            ESPNowProxyPeer* peer = it->second;
-            ESP_LOGCONFIG(
-                TAG, "    Peer %s - address: %s",
-                peer->get_name_prefix().c_str(),
-                addr64_to_str(peer->get_address()).c_str());
-        }
-
-        // esp now peers
-        esp_now_peer_num_t num_peers;
-        if (esp_now_get_peer_num(&num_peers) != ESP_OK) {
-            return;
-        }
-        esp_now_peer_info_t peers[num_peers.total_num];
-        int total = espnow_proxy_base::list_peers((esp_now_peer_info_t *)peers, num_peers.total_num);
-        ESP_LOGCONFIG(TAG, "  ESPNow Peers:");
-        for (auto idx = 0; idx < total; idx++) {
-            if (idx >= MAX_PEERS) {
-                break;
-            }
-            esp_now_peer_info_t peer = peers[idx];
-            mac_address_t address = espnow_proxy_base::addr_to_addr64(peer.peer_addr);
-            ESP_LOGCONFIG(
-                TAG, "    ESPNow Peer - address: %s - ifidx: %d%s",
-                addr_to_str(peer.peer_addr).c_str(),
-                peer.ifidx,
-                address_ == address ? " <- Receiver" : "");
-        }
-        ESP_LOGCONFIG(TAG, "    ... total (%d)", total);
 
     }
 

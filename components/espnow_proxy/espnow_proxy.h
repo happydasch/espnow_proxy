@@ -103,7 +103,6 @@ namespace espnow_proxy {
             bool send(std::string data);
             void setup() override;
             void loop() override;
-            void dump_config() override;
             float get_setup_priority() const override { return setup_priority::WIFI; }
             ESPNowProxyPeer *set_peer(mac_address_t address);
 

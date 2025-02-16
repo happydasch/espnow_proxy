@@ -36,7 +36,7 @@ namespace espnow_proxy_base {
         fill_command_header(Command_Data, packet_id);
         memcpy(buffer.command_data.data, data, size);
 
-        return send(dest, buffer.raw, size + HEADER_LEN);
+        return send(dest, buffer.raw, size + ESPNOW_HEADER_LEN);
 
     }
 

@@ -49,50 +49,46 @@ namespace espnow_proxy_base {
 
     bool add_peer(const uint8_t *peer, int channel, int netif) {
         if (!is_ready()) {
+            ESP_LOGW(TAG, "Attempted to add peer when not ready.");            
             return false;
         }
-
-        esp_now_peer_info_t peer_info{};
-        std::copy_n(peer, MAC_ADDRESS_LEN, peer_info.peer_addr);
-
-        peer_info.channel = static_cast<uint8_t>(channel);
-        peer_info.ifidx = static_cast<wifi_interface_t>(netif);
-
         if (has_peer(peer)) {
             ESP_LOGD(TAG, "Peer %s already exists", addr_to_str(peer).c_str());
-            return esp_now_mod_peer(&peer_info) == ESP_OK;
+            return false;
         }
         ESP_LOGD(TAG, "Adding peer %s", addr_to_str(peer).c_str());
+        
+#ifdef ESP32
+        esp_now_peer_info_t peer_info{};
+        std::copy_n(peer, MAC_ADDRESS_LEN, peer_info.peer_addr);
+        peer_info.channel = static_cast<uint8_t>(channel);
+        peer_info.ifidx = static_cast<wifi_interface_t>(netif);
         return esp_now_add_peer(&peer_info) == ESP_OK;
+#elif ESP8266
+        uint8_t peer_addr[MAC_ADDRESS_LEN];
+        std::copy_n(peer, MAC_ADDRESS_LEN, peer_addr);        
+        return esp_now_add_peer(peer_addr, ESP_NOW_ROLE_COMBO, static_cast<uint8_t>(channel), NULL, 0) == ESP_OK;
+#endif        
     }
 
     bool has_peer(const uint8_t *peer) {
+#ifdef ESP32
         return is_ready() && esp_now_is_peer_exist(peer);
+#elif ESP8266
+        uint8_t peer_addr[MAC_ADDRESS_LEN];
+        std::copy_n(peer, MAC_ADDRESS_LEN, peer_addr);        
+        return is_ready() && esp_now_is_peer_exist(peer_addr);
+#endif
     }
 
     bool remove_peer(const uint8_t *peer) {
+#ifdef ESP32        
         return is_ready() && esp_now_del_peer(peer) == ESP_OK;
-    }
-
-    int list_peers(esp_now_peer_info_t* peers, int max_peers) {
-        if (!is_ready()) {
-            return 0;
-        }
-        int total = 0;
-        esp_now_peer_info_t peer;
-        for (
-            esp_err_t e = esp_now_fetch_peer(true, &peer);
-            e == ESP_OK;
-            e = esp_now_fetch_peer(false, &peer)
-        ) {
-            uint8_t* mac = peer.peer_addr;
-            uint8_t channel = peer.channel;
-            if (total < max_peers) {
-                memcpy(&peers[total], &peer, sizeof(esp_now_peer_info_t));
-            }
-            ++total;
-        }
-        return total;
+#elif ESP8266
+        uint8_t peer_addr[MAC_ADDRESS_LEN];
+        std::copy_n(peer, MAC_ADDRESS_LEN, peer_addr);        
+        return is_ready() && esp_now_del_peer(peer_addr) == ESP_OK;
+#endif        
     }
 
     // public functions
@@ -136,16 +132,23 @@ namespace espnow_proxy_base {
             end();
         }
 
-        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
         state_.is_ready = false;
-        if (esp_now_init() == ESP_OK) {
-            ESP_LOGD(TAG, "Begin: init done");
-            ESP_ERROR_CHECK(esp_now_register_send_cb(send_handler));
-            ESP_ERROR_CHECK(esp_now_register_recv_cb(recv_handler));
-            state_.is_ready = true;
-        } else {
+        if (esp_now_init() != ESP_OK) {
             ESP_LOGW(TAG, "Begin: esp_now_init failed");
+            return;
         }
+        ESP_LOGD(TAG, "Begin: init done");
+        
+        if (esp_now_register_send_cb(send_handler) != ESP_OK) {
+            ESP_LOGW(TAG, "Begin: esp_now_register_send_cb failed");
+            return;
+        }
+        if (esp_now_register_recv_cb(recv_handler) != ESP_OK) {
+            ESP_LOGW(TAG, "Begin: esp_now_register_recv_cb failed");
+            return;
+        }
+        
+        state_.is_ready = true;
         ESP_LOGI(TAG, "Begin: finished");
     }
 
@@ -186,8 +189,11 @@ namespace espnow_proxy_base {
     }
 
     // callbacks
-
+#ifdef ESP32
     void send_handler(const uint8_t *addr, esp_now_send_status_t status) {
+#elif ESP8266
+    void send_handler(uint8_t *addr, esp_now_send_status_t status) {        
+#endif
         if (status == ESP_NOW_SEND_SUCCESS) {
             set_success_(true);
             inc_sent_();
@@ -205,7 +211,11 @@ namespace espnow_proxy_base {
         }
     }
 
+#ifdef ESP32        
     void recv_handler(const uint8_t *addr, const uint8_t *data, int size) {
+#elif ESP8266
+    void recv_handler(uint8_t *addr, uint8_t *data, uint8_t size) {
+#endif
         // addr may be different then base address, see the link below for details.
         // https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/misc_system_api.html
         set_sender_((uint8_t *)addr);  // store the sender of the last message received
