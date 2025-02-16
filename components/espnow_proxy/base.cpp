@@ -119,14 +119,11 @@ namespace espnow_proxy_base {
         set_send_time_(micros());
         set_success_(false);
 
-        if (has_peer(dest)) {
-            if (esp_now_send(dest, data, size) == ESP_OK) {
-                set_success_(true);
-            }
-        } else {
-            if (!add_peer(dest, 0, 0)) {
-                ESP_LOGW(TAG, "Unknown peer: %s", addr_to_str(dest).c_str());
-            }
+        if (!has_peer(dest) && !add_peer(dest, 0, 0)) {
+            ESP_LOGW(TAG, "Unknown peer: %s", addr_to_str(dest).c_str());
+        }
+        if (esp_now_send(dest, data, size) == ESP_OK) {
+            set_success_(true);
         }
 
         ESP_LOGD(TAG, "Send handler finished: %d", is_success());
