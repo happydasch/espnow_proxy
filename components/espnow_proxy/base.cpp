@@ -145,6 +145,9 @@ namespace espnow_proxy_base {
             state_.is_ready = true;
         } else {
             ESP_LOGW(TAG, "Begin: esp_now_init failed");
+            // ATT: this introduces a potential infinite loop
+            esp_now_deinit();
+            begin();
         }
         ESP_LOGI(TAG, "Begin: finished");
     }
