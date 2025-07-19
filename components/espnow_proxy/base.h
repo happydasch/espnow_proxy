@@ -38,6 +38,7 @@ namespace espnow_proxy_base {
     bool send(uint8_t *dest, uint8_t *data, size_t size);
     void begin();
     void end();
+    void deinit();
     bool add_send_callback(send_callback_t callback);
     bool add_recv_callback(recv_callback_t callback);
 
@@ -54,7 +55,7 @@ namespace espnow_proxy_base {
 
     // Callback function prototypes
     void send_handler(const uint8_t *addr, esp_now_send_status_t status);
-    void recv_handler(const uint8_t *addr, const uint8_t *data, int size);
+    void recv_handler(const esp_now_recv_info_t *recv_info, const uint8_t *data, int size);
 
 }  // namespace espnow_proxy_base
 }  // esphome

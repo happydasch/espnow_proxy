@@ -145,23 +145,26 @@ namespace espnow_proxy_base {
             state_.is_ready = true;
         } else {
             ESP_LOGW(TAG, "Begin: esp_now_init failed");
-            // ATT: this introduces a potential infinite loop
-            esp_now_deinit();
+            deinit();
             begin();
         }
         ESP_LOGI(TAG, "Begin: finished");
+    }
+
+    void deinit() {
+        ESP_LOGD(TAG, "End: unregister recv cb call");
+        esp_now_unregister_recv_cb();
+        ESP_LOGD(TAG, "base setup_wifi: unregister send cb call");
+        esp_now_unregister_send_cb();
+        ESP_LOGD(TAG, "End: deinit call");
+        esp_now_deinit();
     }
 
     void end() {
         if (!is_ready()) {
             return;
         }
-        ESP_LOGD(TAG, "End: deinit call");
-        esp_now_deinit();
-        ESP_LOGD(TAG, "End: unregister recv cb call");
-        esp_now_unregister_recv_cb();
-        ESP_LOGD(TAG, "base setup_wifi: unregister send cb call");
-        esp_now_unregister_send_cb();
+        deinit();
         state_.is_ready = false;
         ESP_LOGD(TAG, "End: finished");
     }
@@ -208,15 +211,14 @@ namespace espnow_proxy_base {
         }
     }
 
-    void recv_handler(const uint8_t *addr, const uint8_t *data, int size) {
+    void recv_handler(const esp_now_recv_info_t *recv_info, const uint8_t *data, int size) {
         // addr may be different then base address, see the link below for details.
         // https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/misc_system_api.html
-        set_sender_((uint8_t *)addr);  // store the sender of the last message received
+        set_sender_((uint8_t *)recv_info->src_addr);
         inc_received_();
-        // run callbacks
         for (auto i = 0; i < recv_callback_idx_; i++) {
             if (recv_callbacks_[i]) {
-                recv_callbacks_[i](addr, data, size);
+                recv_callbacks_[i](recv_info->src_addr, data, size);
             }
         }
     }
